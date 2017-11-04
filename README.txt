@@ -1,0 +1,25 @@
+---------------------------------------------------------------------------------
+-- 
+-- Arcade: Bomb Jack port to MiSTer by Sorgelig
+-- 03 November 2017
+-- 
+---------------------------------------------------------------------------------
+-- Bomb Jack implementation in FPGA. Author: Alex 
+-- http://papilio.cc/index.php?n=Playground.BombJack
+---------------------------------------------------------------------------------
+-- 
+-- Support screen and controls rotation on HDMI output.
+-- Only controls are rotated on VGA output.
+-- 
+-- 
+-- Keyboard inputs :
+--
+--   F2          : Insert the coin + Start 2 players
+--   F1          : Insert the coin + Start 1 player
+--   UP,DOWN,LEFT,RIGHT arrows : Movements
+--   SPACE       : Jump
+--
+-- Joystick support.
+-- 
+-- 
+---------------------------------------------------------------------------------

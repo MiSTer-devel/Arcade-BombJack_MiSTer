@@ -1,0 +1,100 @@
+Memory Map
+
+0000-1fff ROM0              ROM_1J    13 09_j01b.bin 13
+2000-3fff ROM1              ROM_1L    13 10_l01b.bin 13
+4000-5fff ROM2              ROM_1M    13 11_m01b.bin
+6000-7fff ROM3              ROM_1N    13 12_n01b.bin
+8000-87ff RAM0  (RAM0 RAM1) RAM_1E    11
+8800-8fff RAM1  (RAM2 RAM3) RAM_1H    11
+9000-97ff Video RAM (RAM 4) RAM_6LM   11
+9820-987f sprites           RAM_3E_3F  7
+9a00      small sprites for video controller
+9c00-9cff Palette RAM       RAM_6A_6B  9
+9e00      bgrd selector     ROM_4P    13
+b000 r    IN0 P1 buttons
+b000 w    interrupt enable
+b001 r    IN1 P2 buttons
+b002 r    IN2 SYS buttons
+b003 r    watchdog reset
+b004 r    DIP SW1
+b004 w    flip screen
+b005 r    DIP SW2
+b800      soundboard
+c000-dfff ROM4              ROM_1R    13 13.1r
+
+BRAM resource tally
+
+MAIN RAM                   RAMB16 tally
+  1E  11x8  wram0_n        1x RAMB16_S9
+  1H  11x8  wram1_n        1x RAMB16_S9
+VIDEO RAM
+  3E   7x4  9800_cs_n      1x RAMB16_S9
+  3F   7x4  9800_cs_n
+  4A   8x4  1V_n and 256H  1x RAMB16_S9
+  4B   8x4  1V_n and 256H
+  4C   8x4  1V_n and 256H  1x RAMB16_S9
+  4D   8x4  1V_n and 256H
+  6LM  11x8 9000_cs        1x RAMB16_S9
+  6A    8x4 9c00_n         1x RAMB16_S9
+  6B    8x4 9c00_n
+  6C    8x4 9c01_n         1x RAMB16_S9
+AUDIO RAM
+  3K   11x8 SRAM           1x RAMB16_S9
+SCAN DOUBLER
+  u_ram 10x18x18           1x RAMB16_S18_S18
+
+ROMS 1 through 8 located on audio/graphics board
+
+audiocpu
+01_h03t.bin ROM_3H 13      4x RAMB16_S2
+            ROM_3J 13      4x RAMB16_S2 (not fitted)
+
+gfx4
+02_p04t.bin ROM_4P 12      2x RAMB16_S4
+
+chars
+03_e08t.bin ROM_8E 12      2x RAMB16_S4
+04_h08t.bin ROM_8H 12      2x RAMB16_S4
+05_k08t.bin ROM_8K 12      2x RAMB16_S4
+
+background tiles
+06_l08t.bin ROM_8L 13      4x RAMB16_S2
+07_n08t.bin ROM_8N 13      4x RAMB16_S2
+08_r08t.bin ROM_8R 13      4x RAMB16_S2
+
+ROMS 9 through 16 located on main board
+
+program ROMS
+09_j01b.bin ROM_1J 13      4x RAMB16_S2
+10_l01b.bin ROM_1L 13      4x RAMB16_S2
+11_m01b.bin ROM_1M 13      4x RAMB16_S2
+12_n01b.bin ROM_1N 13      4x RAMB16_S2
+13.1r       ROM_1R 13      4x RAMB16_S2
+
+sprites
+16_m07b.bin ROM_7M 13      4x RAMB16_S2
+15_l07b.bin ROM_7L 13      4x RAMB16_S2
+14_j07b.bin ROM_7J 13      4x RAMB16_S2
+TOTAL                     70x RAMBS = 1260 Kbits
+
+
+Location of ROM files in external SRAM
+(same order in serial FLASH but stored after the FPGA .bit file)
+
+ size        file rom address
+8,192 01_h03t.bin  3H 00000
+4,096 02_p04t.bin  4P 02000
+4,096 03_e08t.bin  8E 04000
+4,096 04_h08t.bin  8H 06000
+4,096 05_k08t.bin  8K 08000
+8,192 06_l08t.bin  8L 0A000
+8,192 07_n08t.bin  8N 0C000
+8,192 08_r08t.bin  8R 0E000
+8,192 09_j01b.bin  1J 10000
+8,192 10_l01b.bin  1L 12000
+8,192 11_m01b.bin  1M 14000
+8,192 12_n01b.bin  1N 16000
+8,192 13.1r        1R 18000
+8,192 14_j07b.bin  7M 16000
+8,192 15_l07b.bin  7L 18000
+8,192 16_m07b.bin  7J 1A000
