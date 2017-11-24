@@ -17,6 +17,11 @@ library ieee;
 
 entity PROG_ROMS is
 	port (
+		clk_48M     : in  std_logic;
+		dn_addr     : in  std_logic_vector(16 downto 0);
+		dn_data     : in  std_logic_vector(7 downto 0);
+		dn_wr       : in  std_logic;
+
 		I_CLK       : in  std_logic;
 		I_ROM_SEL   : in  std_logic_vector( 4 downto 0);
 		I_ADDR      : in  std_logic_vector(12 downto 0);
@@ -31,41 +36,85 @@ architecture RTL of PROG_ROMS is
 	signal ROMD_1M : std_logic_vector( 7 downto 0) := (others => '0');
 	signal ROMD_1N : std_logic_vector( 7 downto 0) := (others => '0');
 	signal ROMD_1R : std_logic_vector( 7 downto 0) := (others => '0');
+	
+	signal 
+		ROM_1J_cs,
+		ROM_1L_cs,
+		ROM_1M_cs,
+		ROM_1N_cs,
+		ROM_1R_cs : std_logic;
+
 begin
 
-	ROM_1J : entity work.ROM_1J
-	port map(
-		clock		=> I_CLK,
-		address		=> I_ADDR,
-		q		=> ROMD_1J
+	ROM_1J_cs <= '1' when dn_addr(16 downto 13) = X"8" else '0';
+	ROM_1L_cs <= '1' when dn_addr(16 downto 13) = X"9" else '0';
+	ROM_1M_cs <= '1' when dn_addr(16 downto 13) = X"A" else '0';
+	ROM_1N_cs <= '1' when dn_addr(16 downto 13) = X"B" else '0';
+	ROM_1R_cs <= '1' when dn_addr(16 downto 13) = X"C" else '0';
+
+	ROM_1J : work.dpram generic map (13,8)
+	port map
+	(
+		clock_a   => clk_48M,
+		wren_a    => dn_wr and ROM_1J_cs,
+		address_a => dn_addr(12 downto 0),
+		data_a    => dn_data,
+
+		clock_b   => I_CLK,
+		address_b => I_ADDR,
+		q_b       => ROMD_1J
 	);
 
-	ROM_1L : entity work.ROM_1L
-	port map(
-		clock		=> I_CLK,
-		address		=> I_ADDR,
-		q		=> ROMD_1L
+	ROM_1L : work.dpram generic map (13,8)
+	port map
+	(
+		clock_a   => clk_48M,
+		wren_a    => dn_wr and ROM_1L_cs,
+		address_a => dn_addr(12 downto 0),
+		data_a    => dn_data,
+
+		clock_b   => I_CLK,
+		address_b => I_ADDR,
+		q_b       => ROMD_1L
 	);
 
-	ROM_1M : entity work.ROM_1M
-	port map(
-		clock		=> I_CLK,
-		address		=> I_ADDR,
-		q		=> ROMD_1M
+	ROM_1M : work.dpram generic map (13,8)
+	port map
+	(
+		clock_a   => clk_48M,
+		wren_a    => dn_wr and ROM_1M_cs,
+		address_a => dn_addr(12 downto 0),
+		data_a    => dn_data,
+
+		clock_b   => I_CLK,
+		address_b => I_ADDR,
+		q_b       => ROMD_1M
 	);
 
-	ROM_1N : entity work.ROM_1N
-	port map(
-		clock		=> I_CLK,
-		address		=> I_ADDR,
-		q		=> ROMD_1N
-	);
+	ROM_1N : work.dpram generic map (13,8)
+	port map
+	(
+		clock_a   => clk_48M,
+		wren_a    => dn_wr and ROM_1N_cs,
+		address_a => dn_addr(12 downto 0),
+		data_a    => dn_data,
 
-	ROM_1R : entity work.ROM_1R
-	port map(
-		clock		=> I_CLK,
-		address		=> I_ADDR,
-		q		=> ROMD_1R
+		clock_b   => I_CLK,
+		address_b => I_ADDR,
+		q_b       => ROMD_1N
+	);
+	
+	ROM_1R : work.dpram generic map (13,8)
+	port map
+	(
+		clock_a   => clk_48M,
+		wren_a    => dn_wr and ROM_1R_cs,
+		address_a => dn_addr(12 downto 0),
+		data_a    => dn_data,
+
+		clock_b   => I_CLK,
+		address_b => I_ADDR,
+		q_b       => ROMD_1R
 	);
 
 	O_DATA <=

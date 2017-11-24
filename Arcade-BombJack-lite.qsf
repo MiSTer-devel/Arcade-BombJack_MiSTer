@@ -353,31 +353,17 @@ set_location_assignment PIN_W20 -to SW[3]
 
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:sys/build_id.tcl"
 
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 set_global_assignment -name CDF_FILE jtag_lite.cdf
 set_global_assignment -name QIP_FILE sys/sys.qip
 set_global_assignment -name QIP_FILE sys/sysmem.qip
-set_global_assignment -name VHDL_FILE memory/rom_7j.vhd
-set_global_assignment -name VHDL_FILE memory/rom_7l.vhd
-set_global_assignment -name VHDL_FILE memory/rom_7m.vhd
-set_global_assignment -name VHDL_FILE memory/rom_8k.vhd
-set_global_assignment -name VHDL_FILE memory/rom_8h.vhd
-set_global_assignment -name VHDL_FILE memory/rom_8e.vhd
-set_global_assignment -name VHDL_FILE memory/rom_4p.vhd
-set_global_assignment -name VHDL_FILE memory/rom_8r.vhd
-set_global_assignment -name VHDL_FILE memory/rom_8n.vhd
-set_global_assignment -name VHDL_FILE memory/rom_8l.vhd
-set_global_assignment -name VHDL_FILE memory/rom_1j.vhd
-set_global_assignment -name VHDL_FILE memory/rom_1l.vhd
-set_global_assignment -name VHDL_FILE memory/rom_1m.vhd
-set_global_assignment -name VHDL_FILE memory/rom_1n.vhd
-set_global_assignment -name VHDL_FILE memory/rom_1r.vhd
+set_global_assignment -name VHDL_FILE dpram.vhd
 set_global_assignment -name VHDL_FILE memory/ram_1e.vhd
 set_global_assignment -name VHDL_FILE memory/ram_1h.vhd
 set_global_assignment -name VHDL_FILE memory/ram_6ab.vhd
 set_global_assignment -name VHDL_FILE memory/ram_6c.vhd
 set_global_assignment -name VHDL_FILE memory/ram4x.vhd
 set_global_assignment -name VHDL_FILE memory/ram_3k.vhd
-set_global_assignment -name VHDL_FILE memory/rom_3h.vhd
 set_global_assignment -name VHDL_FILE memory/ram_6lm.vhd
 set_global_assignment -name VHDL_FILE memory/ram_3ef.vhd
 set_global_assignment -name VHDL_FILE T80/T80_Reg.vhd
@@ -402,4 +388,3 @@ set_global_assignment -name VERILOG_FILE screen_rotate.v
 set_global_assignment -name VHDL_FILE bombjack/bombjack.vhd
 set_global_assignment -name VHDL_FILE bombjack_top.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE "Arcade-BombJack.sv"
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

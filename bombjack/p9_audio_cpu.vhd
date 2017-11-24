@@ -23,6 +23,11 @@ library ieee;
 
 entity audio is
 	port (
+		clk_48M     : in  std_logic;
+		dn_addr     : in  std_logic_vector(16 downto 0);
+		dn_data     : in  std_logic_vector(7 downto 0);
+		dn_wr       : in  std_logic;
+
 		I_CLK_12M	: in  std_logic;
 		I_CLK_EN		: in  std_logic;
 		I_RESET_n	: in  std_logic;
@@ -71,6 +76,8 @@ architecture RTL of audio is
 	signal s_vsync_n_t0		: std_logic := '0';
 	signal s_vsync_n_t1		: std_logic := '0';
 	signal s_vsync_n_re		: std_logic := '0';
+
+	signal ROM_3H_cs        : std_logic;
 
 begin
 
@@ -180,13 +187,20 @@ begin
 	        q		=> ram_data
 	);
 
-	-- chip 3H page 9
-	ROM_3H : entity work.ROM_3H
-	port map (
-		clock		=> I_CLK_12M,
-		clken		=> s_srom1,
-		address		=> cpu_addr(12 downto 0),
-		q		=> rom_3H_data
+	ROM_3H_cs <= '1' when dn_addr(16 downto 13) = X"0" else '0';
+
+	ROM_3H : work.dpram generic map (13,8)
+	port map
+	(
+		clock_a   => clk_48M,
+		wren_a    => dn_wr and ROM_3H_cs,
+		address_a => dn_addr(12 downto 0),
+		data_a    => dn_data,
+
+		clock_b   => I_CLK_12M,
+		enable_b  => s_srom1,
+		address_b => cpu_addr(12 downto 0),
+		q_b       => rom_3H_data
 	);
 
 --	-- chip 3J page 9 (not fitted to board, empty socket)
