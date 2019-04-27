@@ -81,33 +81,44 @@ assign LED_USER  = ioctl_download;
 assign LED_DISK  = 0;
 assign LED_POWER = 0;
 
-assign HDMI_ARX = status[1] ? 8'd16 : status[2] ? 8'd4 : 8'd1;
-assign HDMI_ARY = status[1] ? 8'd9  : status[2] ? 8'd3 : 8'd1;
+assign HDMI_ARX = status[1] ? 8'd16 : status[2] ? 8'd4 : 8'd3;
+assign HDMI_ARY = status[1] ? 8'd9  : status[2] ? 8'd3 : 8'd4;
 
 `include "build_id.v" 
 localparam CONF_STR = {
 	"A.BMBJCK;;",
+	"F,rom;", // allow loading of alternate ROMs
 	"-;",
 	"O1,Aspect Ratio,Original,Wide;",
 	"O2,Orientation,Vert,Horz;",
-	"O34,Scanlines(vert),No,25%,50%,75%;",
+	"O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
 	"-;",
-	"T6,Reset;",
-	"J,Jump,Start 1P,Start 2P;",
-	"V,v2.00.",`BUILD_DATE
+	"O7,Demo Sounds,On,Off;",
+	"O89,Lives,3,4,5,2;",
+	"OAB,Bonus,500k,750k;",
+	"OC,Cabinet,Upright,Cocktail;",	
+	"ODE,Enemies number and speed,Easy,Medium,Hard,Insane;",	
+	"OIJ,Bird Speed,Easy,Medium,Hard,Insane;",
+	"OFH,Bonus Life,None,Every 100k,Every 30k,50k only,100k only,50k and 100k,100k and 300k,50k and 100k and 300k;",	
+	"-;",
+	"R0,Reset;",
+	"J1,Jump,Start 1P,Start 2P;",
+	"V,v",`BUILD_DATE
 };
+
 
 ////////////////////   CLOCKS   ///////////////////
 
-wire clk_sys, clk_vid;
+wire clk_sys, clk_vid,clk_24;
 wire pll_locked;
 
 pll pll
 (
 	.refclk(CLK_50M),
 	.rst(0),
-	.outclk_0(clk_sys),
-	.outclk_1(clk_vid),
+	.outclk_0(clk_sys), // 48
+	.outclk_1(clk_vid), // 6
+	.outclk_2(clk_24),  // 24
 	.locked(pll_locked)
 );
 
@@ -115,6 +126,7 @@ pll pll
 
 wire [31:0] status;
 wire  [1:0] buttons;
+wire        forced_scandoubler;
 
 wire        ioctl_download;
 wire        ioctl_wr;
@@ -135,6 +147,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 
 	.buttons(buttons),
 	.status(status),
+	.forced_scandoubler(forced_scandoubler),
 
 	.ioctl_download(ioctl_download),
 	.ioctl_wr(ioctl_wr),
@@ -163,6 +176,20 @@ always @(posedge clk_sys) begin
 
 			'h005: btn_one_player  <= pressed; // F1
 			'h006: btn_two_players <= pressed; // F2
+			// JPAC/IPAC/MAME Style Codes
+
+			'h005: btn_one_player  <= pressed; // F1
+			'h006: btn_two_players <= pressed; // F2
+			'h016: btn_start_1     <= pressed; // 1
+			'h01E: btn_start_2     <= pressed; // 2
+			'h02E: btn_coin_1      <= pressed; // 5
+			'h036: btn_coin_2      <= pressed; // 6
+			'h02D: btn_up_2        <= pressed; // R
+			'h02B: btn_down_2      <= pressed; // F
+			'h023: btn_left_2      <= pressed; // D
+			'h034: btn_right_2     <= pressed; // G
+			'h01C: btn_fire_2      <= pressed; // A
+			'h02C: btn_test           <= pressed; // T
 		endcase
 	end
 end
@@ -175,56 +202,67 @@ reg btn_fire     = 0;
 reg btn_one_player  = 0;
 reg btn_two_players = 0;
 
+reg btn_start_1=0;
+reg btn_start_2=0;
+reg btn_coin_1=0;
+reg btn_coin_2=0;
+reg btn_up_2=0;
+reg btn_down_2=0;
+reg btn_left_2=0;
+reg btn_right_2=0;
+reg btn_fire_2=0;
+reg btn_test=0;
+
+
 wire m_up     = status[2] ? btn_left  | joy[1] : btn_up    | joy[3];
 wire m_down   = status[2] ? btn_right | joy[0] : btn_down  | joy[2];
 wire m_left   = status[2] ? btn_down  | joy[2] : btn_left  | joy[1];
 wire m_right  = status[2] ? btn_up    | joy[3] : btn_right | joy[0];
 wire m_fire   = btn_fire | joy[4];
 
+wire m_up_2     = status[2] ? btn_left_2  | joy[1] : btn_up_2    | joy[3];
+wire m_down_2   = status[2] ? btn_right_2 | joy[0] : btn_down_2  | joy[2];
+wire m_left_2   = status[2] ? btn_down_2  | joy[2] : btn_left_2  | joy[1];
+wire m_right_2  = status[2] ? btn_up_2    | joy[3] : btn_right_2 | joy[0];
+wire m_fire_2  = btn_fire_2|joy[4];
+
 wire m_start1 = btn_one_player  | joy[5];
 wire m_start2 = btn_two_players | joy[6];
 wire m_coin   = m_start1 | m_start2;
 
+
+
 wire hblank, vblank;
-wire ce_vid = ce_6m;
+wire ce_vid = clk_vid;
 wire hs, vs;
-wire rde, rhs, rvs;
-wire [3:0] r,g,b;
-wire [3:0] rr,rg,rb;
+wire [3:0] r,g;
+wire [3:0] b;
 
-assign VGA_CLK  = clk_sys;
-assign VGA_CE   = ce_vid;
-assign VGA_R    = {r,r};
-assign VGA_G    = {g,g};
-assign VGA_B    = {b,b};
-assign VGA_DE   = ~(hblank | vblank);
-assign VGA_HS   = hs;
-assign VGA_VS   = vs;
+reg ce_pix;
+always @(posedge clk_24) begin
+        reg old_clk;
 
-assign HDMI_CLK = VGA_CLK;
-assign HDMI_CE  = status[2] ? VGA_CE : 1'b1;
-assign HDMI_R   = status[2] ? VGA_R  : {rr,rr};
-assign HDMI_G   = status[2] ? VGA_G  : {rg,rg};
-assign HDMI_B   = status[2] ? VGA_B  : {rb,rb};
-assign HDMI_DE  = status[2] ? VGA_DE : rde;
-assign HDMI_HS  = status[2] ? VGA_HS : rhs;
-assign HDMI_VS  = status[2] ? VGA_VS : rvs;
-assign HDMI_SL  = status[2] ? 2'd0   : status[4:3];
-
-screen_rotate #(257,230,12) screen_rotate
+        old_clk <= clk_vid;
+        ce_pix <= old_clk & ~clk_vid;
+end
+//screen_rotate #(257,230,12) screen_rotate
+arcade_rotate_fx #(257,230,12,0) arcade_video
 (
-	.clk_in(VGA_CLK),
-	.ce_in(ce_vid),
-	.video_in({r,g,b}),
-	.hblank(hblank),
-	.vblank(vblank),
+        .*,
 
-	.clk_out(clk_sys),
-	.video_out({rr,rg,rb}),
-	.hsync(rhs),
-	.vsync(rvs),
-	.de(rde)
+        .clk_video(clk_24),
+        //.ce_pix(ce_vid),
+
+        .RGB_in({r,g,b}),
+        .HBlank(hblank),
+        .VBlank(vblank),
+        .HSync(hs),
+        .VSync(vs),
+
+        .fx(status[5:3]),
+        .no_rotate(status[2])
 );
+
 
 wire [7:0] audio;
 assign AUDIO_L = {audio, audio};
@@ -242,7 +280,7 @@ end
 wire clk_6M;
 bombjack_top bombjack_top
 (
-	.reset(RESET | status[0] | status[6] | buttons[1]),
+	.reset(RESET | status[0] | ioctl_download | buttons[1]),
 
 	.clk_48M(clk_sys),
 	.clk_6M(clk_6M),
@@ -251,22 +289,30 @@ bombjack_top bombjack_top
 	.dn_data(ioctl_dout),
 	.dn_wr(ioctl_wr),
 
-	.p1_start(m_start1),
-	.p1_coin(m_coin),
+	.p1_start(m_start1|btn_start_1),
+	.p1_coin(m_coin|btn_coin_1),
 	.p1_jump(m_fire),
 	.p1_down(m_down),
 	.p1_up(m_up),
 	.p1_left(m_left),
 	.p1_right(m_right),
 
-	.p2_start(m_start2),
-	.p2_coin(0),
-	.p2_jump(0),
-	.p2_down(0),
-	.p2_up(0),
-	.p2_left(0),
-	.p2_right(0),
+	.p2_start(m_start2|btn_start_2),
+	.p2_coin(m_coin|btn_coin_2),
+	.p2_jump(m_fire_2),
+	.p2_down(m_down_2),
+	.p2_up(m_up_2),
+	.p2_left(m_left_2),
+	.p2_right(m_right_2),
 
+	.SW_DEMOSOUNDS(~status[7]),
+	.SW_CABINET(~status[12]),
+	.SW_LIVES(status[9:8]),
+	.SW_ENEMIES(status[14:13]),
+	.SW_BIRDSPEED(status[19:18]),
+	.SW_BONUS(status[17:15]),
+	
+	
 	.VGA_R(r),
 	.VGA_G(g),
 	.VGA_B(b),

@@ -36,6 +36,14 @@ port 	(
 		p1_start, p1_coin, p1_jump, p1_down, p1_up, p1_left, p1_right : in std_logic;
 		p2_start, p2_coin, p2_jump, p2_down, p2_up, p2_left, p2_right : in std_logic;
 				 
+		SW_DEMOSOUNDS  : in std_logic;
+		SW_CABINET     : in std_logic;
+		SW_LIVES			: in std_logic_vector(1 downto 0);
+		SW_ENEMIES		: in std_logic_vector(1 downto 0);
+		SW_BIRDSPEED	: in std_logic_vector(1 downto 0);
+		SW_BONUS			: in std_logic_vector(2 downto 0);
+
+				 
 		dn_addr        : in  std_logic_vector(16 downto 0);
 		dn_data        : in  std_logic_vector(7 downto 0);
 		dn_wr          : in  std_logic;
@@ -146,17 +154,26 @@ begin
 		I_SYS(0)				=> p1_coin,		-- P1 coin
 
 		-- SW1 presets
-		I_SW1(7)				=> '1',			-- demo sounds 1=on, 0=off
-		I_SW1(6)				=> '1',			-- orientation 1=upright, 0=cocktail
-		I_SW1(5 downto 4)	=> "10",			-- lives 00=3, 01=4, 10=5, 11=2
+		--I_SW1(7)				=> '1',			-- demo sounds 1=on, 0=off
+		--I_SW1(6)				=> '1',			-- orientation 1=upright, 0=cocktail
+		--I_SW1(5 downto 4)	=> "10",			-- lives 00=3, 01=4, 10=5, 11=2
+		--I_SW1(3 downto 2)	=> "00",			-- coin b 00=1Coin/1Credit, 01=2Coins/1Credit, 10=1Coin/2Credits, 11=1Coin/3Credits
+		--I_SW1(1 downto 0)	=> "00",			-- coin a 00=1Coin/1Credit, 01=1Coin/2Credits, 10=1Coin/3Credits, 11=1Coin/6Credits
+		I_SW1(7)				=> SW_DEMOSOUNDS,			-- demo sounds 1=on, 0=off
+		I_SW1(6)				=> SW_CABINET,			-- orientation 1=upright, 0=cocktail
+		I_SW1(5 downto 4)	=> SW_LIVES,			-- lives 00=3, 01=4, 10=5, 11=2
 		I_SW1(3 downto 2)	=> "00",			-- coin b 00=1Coin/1Credit, 01=2Coins/1Credit, 10=1Coin/2Credits, 11=1Coin/3Credits
 		I_SW1(1 downto 0)	=> "00",			-- coin a 00=1Coin/1Credit, 01=1Coin/2Credits, 10=1Coin/3Credits, 11=1Coin/6Credits
-                           
+                          
 		-- SW2 presets       
+--		I_SW2(7)				=> '0',			-- special coin 0=easy, 1=hard
+--		I_SW2(6 downto 5)	=> "00",			-- enemies number and speed 00=easy, 01=medium, 10=hard, 11=insane
+--		I_SW2(4 downto 3)	=> "00",			-- bird speed 00=easy, 01=medium, 10=hard, 11=insane
+--		I_SW2(2 downto 0)	=> "010",		-- bonus life 000=none, 001=every 100k, 010=every 30k, 011=50k only, 100=100k only, 101=50k and 100k, 110=100k and 300k, 111=50k and 100k and 300k
 		I_SW2(7)				=> '0',			-- special coin 0=easy, 1=hard
-		I_SW2(6 downto 5)	=> "00",			-- enemies number and speed 00=easy, 01=medium, 10=hard, 11=insane
-		I_SW2(4 downto 3)	=> "00",			-- bird speed 00=easy, 01=medium, 10=hard, 11=insane
-		I_SW2(2 downto 0)	=> "010",		-- bonus life 000=none, 001=every 100k, 010=every 30k, 011=50k only, 100=100k only, 101=50k and 100k, 110=100k and 300k, 111=50k and 100k and 300k
+		I_SW2(6 downto 5)	=> SW_ENEMIES,			-- enemies number and speed 00=easy, 01=medium, 10=hard, 11=insane
+		I_SW2(4 downto 3)	=> SW_BIRDSPEED,			-- bird speed 00=easy, 01=medium, 10=hard, 11=insane
+		I_SW2(2 downto 0)	=> SW_BONUS,		-- bonus life 000=none, 001=every 100k, 010=every 30k, 011=50k only, 100=100k only, 101=50k and 100k, 110=100k and 300k, 111=50k and 100k and 300k
 
 		-- Audio out
 		O_AUDIO				=> audio,
