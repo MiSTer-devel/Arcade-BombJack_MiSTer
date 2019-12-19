@@ -108,7 +108,7 @@ localparam CONF_STR = {
 	"O89,Lives,3,4,5,2;",
 	"OAB,Bonus,500k,750k;",
 	"OC,Cabinet,Upright,Cocktail;",	
-	"ODE,Enemies number and speed,Easy,Medium,Hard,Insane;",	
+	"ODE,Enemy num & speed,Easy,Medium,Hard,Insane;",	
 	"OIJ,Bird Speed,Easy,Medium,Hard,Insane;",
 	"OFH,Bonus Life,None,Every 100k,Every 30k,50k only,100k only,50k and 100k,100k and 300k,50k and 100k and 300k;",	
 	"-;",
