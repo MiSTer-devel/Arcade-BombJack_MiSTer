@@ -1,0 +1,31 @@
+<misterromdescription>
+	<name>Bomb Jack (set 1)</name>
+	<mameversion>0216</mameversion>
+	<mratimestamp>201911270000</mratimestamp>
+	<year>1984</year>
+	<manufacturer>Tehkan</manufacturer>
+	<category>Platform</category>
+	<rbf>bombjack</rbf>
+	<rom index="0" zip="bombjack.zip" md5="32a4212e5f5754b756eaf690b9292c02" type="merged|nonmerged">
+		<part name="01_h03t.bin"/>
+		<part name="02_p04t.bin"/>
+		<part name="02_p04t.bin"/>
+		<part name="03_e08t.bin"/>
+		<part name="03_e08t.bin"/>
+		<part name="04_h08t.bin"/>
+		<part name="04_h08t.bin"/>
+		<part name="05_k08t.bin"/>
+		<part name="05_k08t.bin"/>
+		<part name="06_l08t.bin"/>
+		<part name="07_n08t.bin"/>
+		<part name="08_r08t.bin"/>
+		<part name="09_j01b.bin"/>
+		<part name="10_l01b.bin"/>
+		<part name="11_m01b.bin"/>
+		<part name="12_n01b.bin"/>
+		<part name="13.1r"/>
+		<part name="14_j07b.bin"/>
+		<part name="15_l07b.bin"/>
+		<part name="16_m07b.bin"/>
+	</rom>
+</misterromdescription>
