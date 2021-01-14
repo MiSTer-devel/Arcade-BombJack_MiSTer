@@ -246,7 +246,6 @@ wire m_coin   = joy[7];
 
 
 wire hblank, vblank;
-wire ce_vid = clk_vid;
 wire hs, vs;
 wire [3:0] r,g;
 wire [3:0] b;
@@ -274,7 +273,7 @@ arcade_video #(257,12,0) arcade_video
         .HSync(hs),
         .VSync(vs),
 
-        .fx(status[5:3]),
+        .fx(status[5:3])
 );
 
 
