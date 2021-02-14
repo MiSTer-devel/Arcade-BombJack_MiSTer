@@ -58,7 +58,15 @@ port 	(
 		O_VBLANK			: out	std_logic;
 		O_HBLANK			: out	std_logic;
 
-		audio				: out std_logic_vector( 7 downto 0)
+		audio				: out std_logic_vector( 7 downto 0);
+		
+		pause				: in  std_logic;
+		
+		-- HISCORE
+		hs_address		: in  std_logic_vector(15 downto 0);
+		hs_data_out		: out std_logic_vector(7 downto 0);
+		hs_data_in		: in  std_logic_vector(7 downto 0);
+		hs_write			: in  std_logic
 	);
 end bombjack_top;
 
@@ -216,7 +224,15 @@ begin
 		-- Clocks
 		I_CLK_4M				=> clk_4M_en,
 		I_CLK_6M				=> clk_6M_en,
-		I_CLK_12M			=> clk_12M
+		I_CLK_12M			=> clk_12M,
+		
+		I_PAUSE				=> pause,
+		
+		-- HISCORE
+		hs_address			=> hs_address,
+		hs_data_out			=> hs_data_out,
+		hs_data_in			=> hs_data_in,
+		hs_write				=> hs_write
 	);
 
 	ROM_4P_cs <= '1' when dn_addr(16 downto 13) = X"1" else '0';

@@ -27,4 +27,6 @@ set_global_assignment -name VHDL_FILE rtl/bombjack/p3_timing.vhd
 set_global_assignment -name VHDL_FILE rtl/bombjack/p2_switches.vhd
 set_global_assignment -name VHDL_FILE rtl/bombjack/bombjack.vhd
 set_global_assignment -name VHDL_FILE rtl/bombjack_top.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE "rtl/hiscore.sv"
+set_global_assignment -name VHDL_FILE rtl/dpram_hs.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE "Arcade-BombJack.sv"

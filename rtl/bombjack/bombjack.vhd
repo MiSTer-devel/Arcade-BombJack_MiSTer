@@ -89,9 +89,17 @@ entity BOMB_JACK is
 		dn_wr             : in  std_logic;
 
 		-- Clocks
-		I_CLK_4M				: in		std_logic := '0';
-		I_CLK_6M				: in		std_logic := '0';
-		I_CLK_12M			: in		std_logic := '0'
+		I_CLK_4M				: in	std_logic := '0';
+		I_CLK_6M				: in	std_logic := '0';
+		I_CLK_12M			: in	std_logic := '0';
+		
+		I_PAUSE				: in	std_logic := '0';
+		
+		-- HISCORE
+		hs_address			: in  std_logic_vector(15 downto 0);
+		hs_data_out			: out std_logic_vector(7 downto 0);
+		hs_data_in			: in  std_logic_vector(7 downto 0);
+		hs_write				: in  std_logic
 	);
 end BOMB_JACK;
 
@@ -254,6 +262,13 @@ architecture RTL of BOMB_JACK is
 	signal s_256H_r			: std_logic := '0';
 	signal s_contrlda_n		: std_logic := '1';
 	signal s_contrldb_n		: std_logic := '1';
+	
+	-- HISCORE
+	signal hs_enable_1e		: std_logic := '0';
+	signal hs_enable_6lm		: std_logic := '0';
+	signal hs_data_out_1e	: std_logic_vector(7 downto 0) := (others => '0');
+	signal hs_data_out_6lm	: std_logic_vector(7 downto 0) := (others => '0');
+	
 begin
 
 	O_VIDEO_R			<= s_red;
@@ -271,6 +286,12 @@ begin
 
 	O_HBLANK <= s_256H_r;
 
+
+	-- HISCORE MUX
+	hs_enable_1e	<= '1' when (hs_address(15 downto 11) = "10000"   ) else '0'; -- 0x8000 - 0x87ff
+	hs_enable_6lm	<= '1' when (hs_address(15 downto 11) = "10010"   ) else '0'; -- 0x9000 - 0x97ff
+	hs_data_out 	<=	hs_data_out_1e when hs_enable_1e = '1' else hs_data_out_6lm;
+	
 	----------------------------------------------------------------------------
 	-- concatenate some signals so we can pass them to modules as a logic vector
 	----------------------------------------------------------------------------
@@ -297,9 +318,9 @@ begin
 	cpu_reset_n <= RESETn and (not wd_ctr(3));
 
 	-- chip 5N page 1
-	watchdog : process(clk_12M, s_wdclr)
+	watchdog : process(clk_12M, s_wdclr, I_PAUSE)
 	begin
-		if (s_wdclr = '1') then
+		if (s_wdclr = '1' or I_PAUSE = '1') then
 			wd_ctr <= "0000";
 		elsif falling_edge(clk_12M) then
 			s_vblank_t1 <= s_vblank_t0;
@@ -330,7 +351,8 @@ begin
 	s_csen_n <= s_wait and s_7P5;
 
 	-- chip 6P10 page 1 (deviation from schematic to cleanup the wait pulse by taking s_7P5 into account as well)
-	s_wait_n <= not (s_wait or s_7P9 or s_7P5);
+	-- added user/hiscore system controlled pause
+	s_wait_n <= (not (s_wait or s_7P9 or s_7P5)) and (not I_PAUSE);
 
 	-- clock enable for sound sections P9, P10
 	s_clk_en <= s_1H and not clk_6M_en; -- create a 3M clock enable for the 12M clock
@@ -389,17 +411,25 @@ begin
 	s_wram0  <= not s_wram0_n;
 	s_wram1  <= not s_wram1_n;
 	s_mewr <= not s_mewr_n;
-
+	
 	-- CPU RAM 0x8000 - 0x87ff
 	-- chip 1E page 1
 	ram_1E : entity work.ram_1E
 	port map (
-		address		=> cpu_addr(10 downto 0),
-		clock		=> clk_12M,
-		clken		=> s_wram0,
-		data		=> cpu_data_out,
-		wren		=> s_mewr,
-		q		=> ram0_data
+		address_a	=> cpu_addr(10 downto 0),
+		clock_a		=> clk_12M,
+		enable_a		=> s_wram0,
+		data_a		=> cpu_data_out,
+		wren_a		=> s_mewr,
+		q_a		=> ram0_data,
+		-- HISCORE ACCESS
+		address_b	=> hs_address(10 downto 0),
+		clock_b		=> clk_48M,
+		enable_b	=> hs_enable_1e,
+		data_b		=> hs_data_in,
+		wren_b		=> hs_write and hs_enable_1e,
+		q_b		=> hs_data_out_1e
+		
 	);
 
 	-- CPU RAM 0x8800 - 0x8fff
@@ -643,7 +673,15 @@ begin
 		O_SC					=> s_sc,
 		O_DB					=> char_data,
 		O_ROM_8KHE_ENA		=> O_ROM_8KHE_ENA,
-		O_ROM_8KHE_ADDR	=> O_ROM_8KHE_ADDR
+		O_ROM_8KHE_ADDR	=> O_ROM_8KHE_ADDR,
+		
+		-- HISCORE
+		I_CLK_48M			=>	clk_48M,
+		hs_address			=> hs_address,
+		hs_data_out			=> hs_data_out_6lm,
+		hs_data_in			=> hs_data_in,
+		hs_write				=> (hs_write and hs_enable_6lm),
+		hs_enable			=> hs_enable_6lm
 	);
 
 	------------------------------------------------
