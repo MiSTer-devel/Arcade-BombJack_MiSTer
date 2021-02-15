@@ -52,6 +52,10 @@ module emu
 	output [1:0]  VGA_SL,
 	output        VGA_SCALER, // Force VGA scaler
 
+	input  [11:0] HDMI_WIDTH,
+	input  [11:0] HDMI_HEIGHT,
+	
+`ifdef USE_FB
 	// Use framebuffer from DDRAM (USE_FB=1 in qsf)
 	// FB_FORMAT:
 	//    [2:0] : 011=8bpp(palette) 100=16bpp 101=24bpp 110=32bpp
@@ -76,6 +80,7 @@ module emu
 	output [23:0] FB_PAL_DOUT,
 	input  [23:0] FB_PAL_DIN,
 	output        FB_PAL_WR,
+`endif
 
 	output        LED_USER,  // 1 - ON, 0 - OFF.
 
@@ -90,6 +95,7 @@ module emu
 	output [15:0] AUDIO_R,
 	output        AUDIO_S,    // 1 - signed audio samples, 0 - unsigned
 
+`ifdef USE_DDRAM
 	//High latency DDR3 RAM interface
 	//Use for non-critical time purposes
 	output        DDRAM_CLK,
@@ -102,8 +108,10 @@ module emu
 	output [63:0] DDRAM_DIN,
 	output  [7:0] DDRAM_BE,
 	output        DDRAM_WE,
+`endif
 
 `ifdef USE_SDRAM
+	//SDRAM interface with lower latency
 	output        SDRAM_CLK,
 	output        SDRAM_CKE,
 	output [12:0] SDRAM_A,
@@ -123,7 +131,9 @@ module emu
 	// 2..6 - USR2..USR6
 	// Set USER_OUT to 1 to read from USER_IN.
 	input   [6:0] USER_IN,
-	output  [6:0] USER_OUT
+	output  [6:0] USER_OUT,
+	
+	input         OSD_STATUS
 );
 
 
@@ -143,9 +153,6 @@ assign VIDEO_ARX = (!ar) ? ((status[2])  ? 8'd4 : 8'd3) : (ar - 1'd1);
 assign VIDEO_ARY = (!ar) ? ((status[2])  ? 8'd3 : 8'd4) : 12'd0;
 
 
-
-
-
 `include "build_id.v" 
 localparam CONF_STR = {
 	"A.BMBJCK;;",
@@ -156,14 +163,16 @@ localparam CONF_STR = {
 	"O7,Demo Sounds,On,Off;",
 	"O89,Lives,3,4,5,2;",
 	"OAB,Bonus,500k,750k;",
-	"OC,Cabinet,Upright,Cocktail;",	
-	"ODE,Enemy num & speed,Easy,Medium,Hard,Insane;",	
+	"OC,Cabinet,Upright,Cocktail;",
+	"ODE,Enemy num & speed,Easy,Medium,Hard,Insane;",
 	"OIJ,Bird Speed,Easy,Medium,Hard,Insane;",
-	"OFH,Bonus Life,None,Every 100k,Every 30k,50k only,100k only,50k and 100k,100k and 300k,50k and 100k and 300k;",	
+	"OFH,Bonus Life,None,Every 100k,Every 30k,50k only,100k only,50k and 100k,100k and 300k,50k and 100k and 300k;",
+	"-;",
+	"OK,High Score Save,Manual,Off;",
 	"-;",
 	"R0,Reset;",
-	"J1,Jump,Start 1P,Start 2P,Coin;",
-	"jn,A,Start,Select,R;",
+	"J1,Jump,Start 1P,Start 2P,Coin,Pause;",
+	"jn,A,Start,Select,R,L;",
 	"V,v",`BUILD_DATE
 };
 
@@ -191,15 +200,19 @@ wire        forced_scandoubler;
 wire        direct_video;
 
 wire        ioctl_download;
+wire        ioctl_upload;
 wire        ioctl_wr;
+wire  [7:0]	ioctl_index;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
-
+wire  [7:0] ioctl_din;
 
 wire [15:0] joystick_0, joystick_1;
 wire [15:0] joy = joystick_0 | joystick_1;
 
 wire [21:0] gamma_bus;
+
+reg 			pause;
 
 
 hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
@@ -217,9 +230,12 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 	.direct_video(direct_video),
 
 	.ioctl_download(ioctl_download),
+	.ioctl_upload(ioctl_upload),
 	.ioctl_wr(ioctl_wr),
 	.ioctl_addr(ioctl_addr),
 	.ioctl_dout(ioctl_dout),
+	.ioctl_din(ioctl_din),
+	.ioctl_index(ioctl_index),
 
 	.joystick_0(joystick_0),
 	.joystick_1(joystick_1)
@@ -242,7 +258,14 @@ wire m_fire_2  = joy[4];
 wire m_start1 = joy[5];
 wire m_start2 = joy[6];
 wire m_coin   = joy[7];
+wire m_pause  = joy[8];
 
+reg pause_toggle = 1'b0;
+always @(posedge clk_sys) begin
+    reg old_pause;
+    old_pause <= m_pause;
+    if(~old_pause & m_pause) pause_toggle <= ~pause_toggle;
+end
 
 
 wire hblank, vblank;
@@ -282,11 +305,13 @@ assign AUDIO_L = {audio, audio};
 assign AUDIO_R = AUDIO_L;
 assign AUDIO_S = 0;
 
+wire reset;
+assign reset = RESET | status[0] | ioctl_download | buttons[1];
 
 wire clk_6M;
 bombjack_top bombjack_top
 (
-	.reset(RESET | status[0] | ioctl_download | buttons[1]),
+	.reset(reset),
 
 	.clk_48M(clk_sys),
 	.clk_6M(clk_6M),
@@ -327,7 +352,40 @@ bombjack_top bombjack_top
 	.O_VBLANK(vblank),
 	.O_HBLANK(hblank),
 
-	.audio(audio)
+	.audio(audio),
+	
+	.pause(pause),
+	
+	.hs_address(hs_address),
+	.hs_data_out(ioctl_din),
+	.hs_data_in(hs_to_ram),
+	.hs_write(hs_write)
+);
+
+
+wire [15:0]hs_address;
+wire [7:0]hs_to_ram;
+wire hs_write;
+wire hs_pause;
+
+assign pause = hs_pause || pause_toggle;
+
+hiscore #(16) hi (
+   .clk(clk_sys),
+   .reset(reset),
+   .mode(status[20]),
+	.delay(1'b0),
+   .ioctl_upload(ioctl_upload),
+   .ioctl_download(ioctl_download),
+   .ioctl_wr(ioctl_wr),
+   .ioctl_addr(ioctl_addr),
+   .ioctl_dout(ioctl_dout),
+   .ioctl_din(ioctl_din),
+   .ioctl_index(ioctl_index),
+   .ram_address(hs_address),
+   .data_to_ram(hs_to_ram),
+   .ram_write(hs_write),
+	.pause(hs_pause)
 );
 
 endmodule

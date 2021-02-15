@@ -40,7 +40,15 @@ entity char_gen is
 		O_SC					: out std_logic_vector ( 3 downto 0) := (others => '0');
 		O_DB					: out std_logic_vector ( 7 downto 0) := (others => '0');
 		O_ROM_8KHE_ADDR	: out std_logic_vector (12 downto 0);
-		O_ROM_8KHE_ENA		: out std_logic
+		O_ROM_8KHE_ENA		: out std_logic;
+
+		-- HISCORE
+		I_CLK_48M			: in  std_logic;
+		hs_address			: in  std_logic_vector(15 downto 0);
+		hs_data_out			: out std_logic_vector(7 downto 0);
+		hs_data_in			: in  std_logic_vector(7 downto 0);
+		hs_enable			: in  std_logic;
+		hs_write				: in  std_logic
 	);
 end char_gen;
 
@@ -79,11 +87,19 @@ begin
 	-- chip 6LM page 6
 	RAM_6LM : entity work.ram_6lm
 	port map (
-		address		=> s_6LM_addr,
-		clock		=> I_CLK_12M, -- due to T80 early read in T3 state, this 2x clock is required here
-		data		=> I_DB,
-		wren		=> s_6LM_wr,
-		q		=> s_6LM_data
+		address_a	=> s_6LM_addr,
+		clock_a		=> I_CLK_12M, -- due to T80 early read in T3 state, this 2x clock is required here
+		data_a		=> I_DB,
+		wren_a		=> s_6LM_wr,
+		q_a			=> s_6LM_data,
+		
+		-- HISCORE ACCESS
+		address_b	=> hs_address(10 downto 0),
+		clock_b		=> I_CLK_48M,
+		enable_b		=> hs_enable,
+		data_b		=> hs_data_in,
+		wren_b		=> hs_write,
+		q_b		=> hs_data_out
 	);
 
 	-- chip 5L page 6
