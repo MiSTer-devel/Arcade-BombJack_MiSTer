@@ -168,8 +168,6 @@ localparam CONF_STR = {
 	"OIJ,Bird Speed,Easy,Medium,Hard,Insane;",
 	"OFH,Bonus Life,None,Every 100k,Every 30k,50k only,100k only,50k and 100k,100k and 300k,50k and 100k and 300k;",
 	"-;",
-	"OK,High Score Save,Manual,Off;",
-	"-;",
 	"R0,Reset;",
 	"J1,Jump,Start 1P,Start 2P,Coin,Pause;",
 	"jn,A,Start,Select,R,L;",
@@ -307,6 +305,7 @@ assign AUDIO_S = 0;
 
 wire reset;
 assign reset = RESET | status[0] | ioctl_download | buttons[1];
+wire rom_download = ioctl_download && !ioctl_index;
 
 wire clk_6M;
 bombjack_top bombjack_top
@@ -318,7 +317,7 @@ bombjack_top bombjack_top
 
 	.dn_addr(ioctl_addr[16:0]),
 	.dn_data(ioctl_dout),
-	.dn_wr(ioctl_wr),
+	.dn_wr(ioctl_wr & rom_download),
 
 	.p1_start(m_start1),
 	.p1_coin(m_coin),
@@ -371,20 +370,19 @@ wire hs_pause;
 assign pause = hs_pause || pause_toggle;
 
 hiscore #(16) hi (
-   .clk(clk_sys),
-   .reset(reset),
-   .mode(status[20]),
+	.clk(clk_sys),
+	.reset(reset),
 	.delay(1'b0),
-   .ioctl_upload(ioctl_upload),
-   .ioctl_download(ioctl_download),
-   .ioctl_wr(ioctl_wr),
-   .ioctl_addr(ioctl_addr),
-   .ioctl_dout(ioctl_dout),
-   .ioctl_din(ioctl_din),
-   .ioctl_index(ioctl_index),
-   .ram_address(hs_address),
-   .data_to_ram(hs_to_ram),
-   .ram_write(hs_write),
+	.ioctl_upload(ioctl_upload),
+	.ioctl_download(ioctl_download),
+	.ioctl_wr(ioctl_wr),
+	.ioctl_addr(ioctl_addr),
+	.ioctl_dout(ioctl_dout),
+	.ioctl_din(ioctl_din),
+	.ioctl_index(ioctl_index),
+	.ram_address(hs_address),
+	.data_to_ram(hs_to_ram),
+	.ram_write(hs_write),
 	.pause(hs_pause)
 );
 
