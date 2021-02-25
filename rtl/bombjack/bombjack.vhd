@@ -100,6 +100,8 @@ entity BOMB_JACK is
 		hs_data_out			: out std_logic_vector(7 downto 0);
 		hs_data_in			: in  std_logic_vector(7 downto 0);
 		hs_write				: in  std_logic
+;
+		flip_screen			: in std_logic
 	);
 end BOMB_JACK;
 
@@ -135,7 +137,8 @@ architecture RTL of BOMB_JACK is
 	signal clk_6M_en			: std_logic := '0';
 	signal clk_12M				: std_logic := '0';
 	signal s_clk_en			: std_logic := '0';
-	signal s_flip				: std_logic := '0';
+	signal s_flip			: std_logic := '0';
+	signal s_flip_switched		: std_logic := '0';
 	signal s_merd_n			: std_logic := '1';
 	signal s_mewr_n			: std_logic := '1';
 	signal s_mewr				: std_logic := '0';
@@ -500,6 +503,7 @@ begin
 		BUSAK_n		=> open  -- unused
 	);
 
+	s_flip_switched <= flip_screen xor s_flip;
 	-------------------------------------------------------------------------
 	-- page 2 schematic - input switches, watchdog and non-maskable interrupt
 	-------------------------------------------------------------------------
@@ -522,8 +526,10 @@ begin
 		O_DB		=> io_data,
 		O_WDCLR		=> s_wdclr,
 		O_NMION		=> s_nmion,
-		O_FLIP		=> s_flip
+		O_FLIP 		=> s_flip,
+		flip_screen	=> flip_screen
 	);
+
 
 	-------------------------------------------------------
 	-- page 3 schematic - video and timing signal generator
@@ -532,7 +538,7 @@ begin
 	port map (
 		I_CLK_12M	=> clk_12M,
 		I_CLK_6M_EN	=> clk_6M_en,
-		I_FLIP		=> s_flip,
+		I_FLIP		=> s_flip_switched,
 		I_CS_9A00_n	=> s_cs_9a00_n,
 		I_MEWR_n				=> s_mewr_n,
 		I_AB					=> cpu_addr(0),
@@ -633,7 +639,7 @@ begin
 	port map (
 		I_CLK_12M		=> clk_12M,
 		I_CLK_6M_EN		=> clk_6M_en,
-		I_FLIP			=> s_flip,
+		I_FLIP			=> s_flip_switched,
 		I_CONTRLDA_n	=> s_contrlda_n,
 		I_CONTRLDB_n	=> s_contrldb_n,
 		I_MHFLIP			=> s_mhflip,
@@ -658,7 +664,7 @@ begin
 		I_CS_9000_n			=> s_cs_9000_n,
 		I_MEWR_n				=> s_mewr_n,
 		I_CMPBLK_n			=> s_cmpblk_n,
-		I_FLIP				=> s_flip,
+		I_FLIP				=> s_flip_switched,
 		I_SS					=> s_ss,
 		I_SL1_n				=> s_sl1_n,
 		I_SL2_n				=> s_sl2_n,
@@ -696,7 +702,7 @@ begin
 		I_CMPBLK_n			=> s_cmpblk_n,
 		I_SLOAD_n			=> s_sload_n,
 		I_SL2_n				=> s_sl2_n,
-		I_FLIP				=> s_flip,
+		I_FLIP				=> s_flip_switched,
 		I_4P_BUS				=> s_4p_bus,
 		I_T_BUS				=> s_t_bus,
 		I_DB					=> cpu_data_out(4 downto 0),
