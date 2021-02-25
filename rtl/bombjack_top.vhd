@@ -66,7 +66,8 @@ port 	(
 		hs_address		: in  std_logic_vector(15 downto 0);
 		hs_data_out		: out std_logic_vector(7 downto 0);
 		hs_data_in		: in  std_logic_vector(7 downto 0);
-		hs_write			: in  std_logic
+		hs_write			: in  std_logic;
+		flip_screen			: in  std_logic
 	);
 end bombjack_top;
 
@@ -232,7 +233,9 @@ begin
 		hs_address			=> hs_address,
 		hs_data_out			=> hs_data_out,
 		hs_data_in			=> hs_data_in,
-		hs_write				=> hs_write
+		hs_write				=> hs_write,
+
+		flip_screen			=> flip_screen
 	);
 
 	ROM_4P_cs <= '1' when dn_addr(16 downto 13) = X"1" else '0';

@@ -34,6 +34,7 @@ entity switches is
 		I_P1         : in  std_logic_vector(7 downto 0); -- Player 1 controls
 		I_P2         : in  std_logic_vector(7 downto 0); -- Player 2 controls
 		I_SYS        : in  std_logic_vector(7 downto 0); -- Coin1/2, Start1/2 contacts
+		flip_screen  : in  std_logic;
 		--
 		O_DB         : out std_logic_vector(7 downto 0) := (others => '0');
 		O_WDCLR      : out std_logic := '0';

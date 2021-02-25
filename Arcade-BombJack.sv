@@ -160,6 +160,7 @@ localparam CONF_STR = {
 	"H0O2,Orientation,Vert,Horz;",
 	"O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
 	"-;",
+	"ON,Flip Screen,Off,On;",
 	"O7,Demo Sounds,On,Off;",
 	"O89,Lives,3,4,5,2;",
 	"OAB,Bonus,500k,750k;",
@@ -341,8 +342,7 @@ bombjack_top bombjack_top
 	.SW_ENEMIES(status[14:13]),
 	.SW_BIRDSPEED(status[19:18]),
 	.SW_BONUS(status[17:15]),
-	
-	
+
 	.VGA_R(r),
 	.VGA_G(g),
 	.VGA_B(b),
@@ -352,13 +352,14 @@ bombjack_top bombjack_top
 	.O_HBLANK(hblank),
 
 	.audio(audio),
-	
+
 	.pause(pause),
-	
+
 	.hs_address(hs_address),
 	.hs_data_out(ioctl_din),
 	.hs_data_in(hs_to_ram),
-	.hs_write(hs_write)
+	.hs_write(hs_write),
+	.flip_screen(status[23])
 );
 
 
